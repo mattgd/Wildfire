@@ -1,21 +1,13 @@
+package me.mattgd.wildfire;
+
 /**
- * @Wildfire.java
- *
  * @author mattgd
  * @version 1.03 2016/2/1
  */
- 
-import java.text.DecimalFormat;
- 
 class Wildfire {
-    final private int EMPTY = 0;
-    final private int TREE = 1;
-    final private int BURNING = 2;
     private double probCatch = 0.6;
     private double probTree = 0.8;
     private double probBurning = 0.1;
-    private double probLightning = 0.1;
-    private double probGrow = 0.1;
     private int[][] forest;
  
     // precondition: n is an odd number
@@ -26,9 +18,9 @@ class Wildfire {
             for (int j = 1; j < forest.length - 1; j++) {
                 if (Math.random() <= probTree) {
                     if (Math.random() <= probBurning) {
-                        forest[i][j] = BURNING;
+                        forest[i][j] = BlockState.BURNING.getValue();
                     } else {
-                        forest[i][j] = TREE;
+                        forest[i][j] = BlockState.TREE.getValue();
                     }
                 }
             }
@@ -36,7 +28,7 @@ class Wildfire {
     }
      
     // This method runs one round of the simulation.
-    public void applySpread() {
+    void applySpread() {
         int[][] burningForest = new int[forest.length][forest[0].length];
          
         for (int i = 1; i < burningForest.length - 1; i++) {
@@ -49,22 +41,32 @@ class Wildfire {
     }
      
     // You can use this helper method if you want...
-    public int spread(int row, int col) {
+    private int spread(int row, int col) {
         int[][] forest = getForest();
         int cell = forest[row][col];
-         
+
+        final int BURNING = BlockState.BURNING.getValue();
+        final int EMPTY = BlockState.EMPTY.getValue();
+        final int TREE = BlockState.TREE.getValue();
+
         if (cell == BURNING) {
             cell = EMPTY;
         } else if (cell == TREE) {
-             
+            double probLightning = 0.1;
             if (forest[row - 1][col] == BURNING || forest[row + 1][col] == BURNING
                  || forest[row][col - 1] == BURNING || forest[row][col + 1] == BURNING) {
-                if (Math.random() <= probCatch) cell = BURNING;
+                if (Math.random() <= probCatch) {
+                    cell = BURNING;
+                }
             } else if (Math.random() <= probCatch * probLightning) {
                 cell = BURNING;
             }
         } else if (cell == EMPTY) {
-            if (Math.random() <= probGrow) cell = TREE;
+            double probGrow = 0.1;
+
+            if (Math.random() <= probGrow) {
+                cell = TREE;
+            }
         }
  
         return cell;
@@ -72,18 +74,19 @@ class Wildfire {
   
     // So you can look at the state of the data without the viewer
     public void display() {
-        for (int i = 0; i < forest.length; i++) {
-            for (int j = 0; j < forest[i].length; j++) {
-                System.out.print(forest[i][j] + " ");
+        for (int[] aForest : forest) {
+            for (int anAForest : aForest) {
+                System.out.print(anAForest + " ");
             }
-            System.out.println("");
+
+            System.out.println();
         }
-        System.out.println("\n--------------------------------------------------\n");
-        System.out.println();
+
+        System.out.println("\n--------------------------------------------------\n\n");
     }
   
     // The graphics needs a way to look at the data in this "engine"
-    public int[][] getForest() {
+    int[][] getForest() {
         return forest;
     }
      
@@ -107,19 +110,19 @@ class Wildfire {
         probBurning = prob;
     }
      
-    public void setProbCatch(double prob) {
+    private void setProbCatch(double prob) {
         probCatch = prob;
     }
      
-    public void burn() {
+    private void burn() {
         boolean burning = true;
         while (burning) {
             burning = false;
             applySpread();
-             
-            for (int i = 0; i < forest.length; i++) {
+
+            for (int[] aForest : forest) {
                 for (int j = 0; j < forest[0].length; j++) {
-                    if (forest[i][j] == BURNING) {
+                    if (aForest[j] == BlockState.BURNING.getValue()) {
                         burning = true;
                         break;
                     }
@@ -128,20 +131,21 @@ class Wildfire {
         }
     }
      
-    public double percentBurned(double probCatch) {
+    private double percentBurned(double probCatch) {
         setProbCatch(probCatch);
         burn();
          
         int count = 0;
         for (int i = 1; i < forest.length - 1; i++) {
             for (int j = 1; j < forest[0].length - 1; j++) {
-                if (forest[i][j] == EMPTY) count++;
+                if (forest[i][j] == BlockState.EMPTY.getValue()) count++;
             }
         }
+
         return count / Math.pow(forest.length - 2, 2) * 100;
     }
      
-    /*public static void main(String args[]) {
+    public static void main(String args[]) {
         double probCatch = 0;
         double[] probAvg = new double[10];
         Wildfire wf;
@@ -168,12 +172,13 @@ class Wildfire {
          
     }
      
-    public static double getAverage(double[] probAvg) {
+    private static double getAverage(double[] probAvg) {
         int total = 0;
-        for (int i = 0; i < probAvg.length; i++) {
-            total += probAvg[i];
+        for (double avg : probAvg) {
+            total += avg;
         }
+
         return total / 10;
-    }*/
+    }
          
 }
